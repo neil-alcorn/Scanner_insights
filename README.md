@@ -2,6 +2,14 @@
 
 Small local barcode analytics app for short-term front-desk tracking.
 
+## Project context
+
+For direction, resume state, and implementation notes, start with:
+
+- `PROJECT_CONTEXT.md`
+- `CHANGELOG.md`
+- `docs/superpowers/plans/2026-06-14-scanner-insights-web-sync-agent.md`
+
 ## What it does
 
 - Stores scans in SQLite
