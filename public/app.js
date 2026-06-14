@@ -7,6 +7,8 @@ const hourlyChart = document.getElementById('hourly-chart');
 const repeatsTable = document.getElementById('repeats-table');
 const recentTable = document.getElementById('recent-table');
 const daysSelect = document.getElementById('days-select');
+const machineSelect = document.getElementById('machine-select');
+const machinesTable = document.getElementById('machines-table');
 const startDateInput = document.getElementById('start-date');
 const endDateInput = document.getElementById('end-date');
 const applyCustomRangeButton = document.getElementById('apply-custom-range');
@@ -151,6 +153,9 @@ async function fetchDashboard() {
     } else {
       params.set('days', activeRange.days || daysSelect.value);
     }
+    if (machineSelect?.value) {
+      params.set('machine', machineSelect.value);
+    }
 
     exportLink.href = `/api/export.csv?${params.toString()}`;
 
@@ -170,10 +175,32 @@ async function fetchDashboard() {
       machineBadge.textContent = `Machine: ${payload.machineId} | Updated ${new Date().toLocaleTimeString()}`;
     }
 
+    if (machineSelect && Array.isArray(payload.availableMachines)) {
+      const current = machineSelect.value;
+      machineSelect.innerHTML = '<option value="">All machines</option>' + payload.availableMachines
+        .map((machine) => `<option value="${machine.machine_id}">${machine.label || machine.machine_id}</option>`)
+        .join('');
+      machineSelect.value = current;
+    }
+
     renderStats(payload.summary);
     renderListener(payload.listener);
     renderDualBars(dailyChart, payload.daily, ['total_scans', 'unique_scans'], (row) => row.day.slice(5));
     renderDualBars(hourlyChart, payload.hourly, ['total_scans'], (row) => `${row.hour}:00`);
+    if (machinesTable) {
+      const lastSeen = new Map((payload.availableMachines || []).map((machine) => [machine.machine_id, machine.last_seen_at || '']));
+      renderTable(
+        machinesTable,
+        payload.machines || [],
+        [
+          (row) => row.machine_id,
+          (row) => formatNumber(row.total_scans),
+          (row) => formatNumber(row.unique_scans),
+          (row) => lastSeen.get(row.machine_id) || ''
+        ],
+        'No machine data in this range.'
+      );
+    }
     renderTable(
       repeatsTable,
       payload.repeats,
@@ -314,6 +341,7 @@ simulateForm.addEventListener('submit', async (event) => {
 });
 
 refreshButton.addEventListener('click', fetchDashboard);
+machineSelect?.addEventListener('change', fetchDashboard);
 daysSelect.addEventListener('change', () => {
   activeRange = {
     mode: 'quick',

@@ -279,6 +279,16 @@ tbody tr:last-child td {
   padding: 16px 0 4px;
 }
 
+.machine-sync-ok {
+  color: var(--success);
+  font-weight: 700;
+}
+
+.machine-sync-warn {
+  color: var(--warning);
+  font-weight: 700;
+}
+
 @media (max-width: 720px) {
   .hero {
     align-items: start;

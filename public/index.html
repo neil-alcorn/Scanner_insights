@@ -29,6 +29,12 @@
             </select>
           </label>
           <label>
+            Machine
+            <select id="machine-select">
+              <option value="">All machines</option>
+            </select>
+          </label>
+          <label>
             Start date
             <input id="start-date" type="date" />
           </label>
@@ -171,6 +177,26 @@
                 </tr>
               </thead>
               <tbody id="repeats-table"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-head">
+            <h2>Machines</h2>
+            <p>Capture status by POS station.</p>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Machine</th>
+                  <th>Range scans</th>
+                  <th>Unique</th>
+                  <th>Last sync</th>
+                </tr>
+              </thead>
+              <tbody id="machines-table"></tbody>
             </table>
           </div>
         </article>
