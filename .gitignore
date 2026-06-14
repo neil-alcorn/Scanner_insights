@@ -1,0 +1,14 @@
+node_modules/
+dist/
+sandbox-install/
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/scanner-insights.json
+run/
+*.log
+.netlify/
+.env
+.env.*
+!.env.example
+.worktrees/
