@@ -21,6 +21,8 @@ Move from isolated local reporting to a hybrid web system:
 
 This is intentionally not browser-only because a normal browser cannot globally capture scanner input while ABC has focus.
 
+The hosted web app should be dashboard and export focused. It should not present local utility controls such as manual scan entry, scanner simulation, listener toggles, reset buttons, or CSV import in the normal web experience. CSV import remains seed/admin tooling, not the primary workflow.
+
 ## Known POS Seed Data
 
 Melissa Alcorn sent two Gmail messages with same-named CSV attachments. The filenames overlap, but the machine data differs.
@@ -49,6 +51,8 @@ Completed on `feature/web-sync-agent`:
 - Netlify Function contracts for dashboard, CSV import, and agent ingest.
 - Cloud SQL schema for `machines` and `scans`.
 - Web dashboard machine filter and machine table.
+- Dashboard-only hosted UI: local listener/manual scan/simulator/import panels removed from the Netlify-facing page.
+- Cloud CSV export endpoint for date and machine filtered reporting.
 - Startup background agent skeleton.
 - Keyboard listener wrapper for `ScannerKeyHook.exe`.
 - Sync client with retryable failure behavior.
@@ -70,6 +74,7 @@ Highest priority next steps:
 5. Import seed CSVs through the cloud import endpoint.
 6. Update installer/startup scripts so the agent runs independently at Windows startup.
 7. Verify the installed agent captures scans, queues while offline, and syncs when online.
+8. Expand analysis/export features once cloud data is flowing, such as repeat patterns, machine comparison, day/hour exports, and date-filtered CSV downloads.
 
 ## Invariants
 

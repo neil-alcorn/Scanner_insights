@@ -15,8 +15,8 @@
           <h1>Scanner Insights</h1>
           <p class="machine-badge" id="machine-badge"></p>
           <p class="lede">
-            Local barcode logging for short-term trend tracking. This build is set up for
-            simulation first, then live scanner capture once tested on the front-desk PC.
+            Web reporting for POS scanner activity. Local background agents capture scans
+            at the desk and sync them here for analysis and export.
           </p>
         </div>
         <div class="controls">
@@ -50,96 +50,6 @@
       </section>
 
       <section class="grid stats" id="stats"></section>
-
-      <section class="grid panels">
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Live Listener</h2>
-            <p>Global keyboard capture for scanner-style digit bursts while ABC remains active.</p>
-          </div>
-          <div class="listener-meta" id="listener-meta"></div>
-          <div class="inline-actions">
-            <button id="listener-toggle" type="button">Pause Listener</button>
-          </div>
-          <p id="listener-status" class="status"></p>
-        </article>
-      </section>
-
-      <section class="grid panels">
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Single Scan</h2>
-            <p>Use this to mimic a single scanner submission.</p>
-          </div>
-          <form id="scan-form" class="form-stack">
-            <label>
-              Barcode
-              <input id="barcode-input" name="barcode" inputmode="numeric" pattern="[0-9]*" placeholder="123456" />
-            </label>
-            <button type="submit">Log Scan</button>
-          </form>
-          <p id="scan-status" class="status"></p>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Scanner Test Pad</h2>
-            <p>Focus this box, then type digits quickly and press Enter to mimic a keyboard-wedge scan.</p>
-          </div>
-          <label>
-            Test input
-            <input
-              id="wedge-input"
-              autocomplete="off"
-              inputmode="numeric"
-              placeholder="Focus here and scan or type fast"
-            />
-          </label>
-          <p class="status">Scanner-style bursts under 120ms between keys are tagged as `wedge-test`.</p>
-          <p id="wedge-status" class="status"></p>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Scanner Simulator</h2>
-            <p>Generate fast repeated traffic to test unique counts and repeat behavior.</p>
-          </div>
-          <form id="simulate-form" class="form-grid">
-            <label>
-              Total scans
-              <input type="number" id="simulate-count" min="1" max="500" value="40" />
-            </label>
-            <label>
-              Unique members
-              <input type="number" id="simulate-members" min="1" max="250" value="18" />
-            </label>
-            <label>
-              Repeat bias
-              <input type="number" id="simulate-repeat" min="0" max="0.95" step="0.05" value="0.35" />
-            </label>
-            <button type="submit">Generate Demo Traffic</button>
-          </form>
-          <div class="inline-actions">
-            <button id="reset-button" class="danger" type="button">Clear All Data</button>
-          </div>
-          <p id="simulate-status" class="status"></p>
-        </article>
-
-        <article class="panel">
-          <div class="panel-head">
-            <h2>Import CSV</h2>
-            <p>Merge exported scan data from another machine. Duplicates are skipped automatically.</p>
-          </div>
-          <div class="form-stack">
-            <label>
-              CSV file
-              <input id="import-file" type="file" accept=".csv" />
-            </label>
-            <button id="import-button" type="button">Import</button>
-          </div>
-          <p id="import-status" class="status"></p>
-        </article>
-      </section>
 
       <section class="grid charts">
         <article class="panel">

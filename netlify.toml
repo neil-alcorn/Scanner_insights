@@ -11,3 +11,8 @@
   from = "/api/import"
   to = "/.netlify/functions/import-csv"
   status = 200
+
+[[redirects]]
+  from = "/api/export.csv"
+  to = "/.netlify/functions/export-csv"
+  status = 200

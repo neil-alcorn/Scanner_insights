@@ -43,6 +43,7 @@ function formatNumber(value) {
 }
 
 function setStatus(element, text, isError = false) {
+  if (!element) return;
   element.textContent = text;
   element.style.color = isError ? 'var(--danger)' : 'var(--muted)';
 }
@@ -70,6 +71,7 @@ function renderStats(summary) {
 }
 
 function renderListener(listener) {
+  if (!listenerMeta || !listenerToggle) return;
   const status = listener?.status || 'unknown';
   const lastSeen = listener?.lastCapturedAt || 'No live captures yet';
   const lastBarcode = listener?.lastBarcode || 'None yet';
@@ -230,7 +232,7 @@ async function fetchDashboard() {
   }
 }
 
-scanForm.addEventListener('submit', async (event) => {
+scanForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus(scanStatus, 'Logging scan...');
 
@@ -267,7 +269,7 @@ async function submitWedgeScan(barcode, source = 'wedge-test') {
   return payload;
 }
 
-wedgeInput.addEventListener('keydown', async (event) => {
+wedgeInput?.addEventListener('keydown', async (event) => {
   if (event.key === 'Enter') {
     event.preventDefault();
     const barcode = wedgeBuffer.trim() || wedgeInput.value.trim();
@@ -316,7 +318,7 @@ wedgeInput.addEventListener('keydown', async (event) => {
   }
 });
 
-simulateForm.addEventListener('submit', async (event) => {
+simulateForm?.addEventListener('submit', async (event) => {
   event.preventDefault();
   setStatus(simulateStatus, 'Generating demo traffic...');
 
@@ -379,7 +381,7 @@ clearCustomRangeButton.addEventListener('click', () => {
   };
   fetchDashboard();
 });
-listenerToggle.addEventListener('click', async () => {
+listenerToggle?.addEventListener('click', async () => {
   const shouldEnable = listenerToggle.textContent !== 'Pause Listener';
   const response = await fetch('/api/listener', {
     method: 'POST',
@@ -390,7 +392,7 @@ listenerToggle.addEventListener('click', async () => {
   renderListener(payload);
 });
 
-resetButton.addEventListener('click', async () => {
+resetButton?.addEventListener('click', async () => {
   const confirmed = window.confirm('Delete all captured scan data?');
   if (!confirmed) return;
 
@@ -399,7 +401,7 @@ resetButton.addEventListener('click', async () => {
   await fetchDashboard();
 });
 
-importButton.addEventListener('click', async () => {
+importButton?.addEventListener('click', async () => {
   const file = importFile.files[0];
   if (!file) {
     setStatus(importStatus, 'Select a CSV file first.', true);
