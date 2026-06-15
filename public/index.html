@@ -10,7 +10,7 @@
   <body>
     <main class="layout">
       <section class="hero">
-        <div>
+        <div class="hero-copy">
           <p class="eyebrow">Four Seasons Health Club</p>
           <h1>Scanner Insights</h1>
           <p class="machine-badge" id="machine-badge"></p>
@@ -19,7 +19,7 @@
             at the desk and sync them here for analysis and export.
           </p>
         </div>
-        <div class="controls">
+        <div class="controls" aria-label="Dashboard filters">
           <label>
             Reporting window
             <select id="days-select">
@@ -45,25 +45,35 @@
           <button id="apply-custom-range" type="button">Apply Custom</button>
           <button id="clear-custom-range" type="button">Use Quick Range</button>
           <button id="refresh-button">Refresh</button>
-          <a id="export-link" href="/api/export.csv?days=14">Export CSV</a>
+          <a id="export-link" class="export-action" href="/api/export.csv?days=14">Export CSV</a>
         </div>
       </section>
 
       <section class="grid stats" id="stats"></section>
 
+      <section class="insights" id="insights"></section>
+
       <section class="grid charts">
-        <article class="panel">
+        <article class="panel chart-panel">
           <div class="panel-head">
-            <h2>Daily Trend</h2>
-            <p>Unique visits versus total scans.</p>
+            <div>
+              <h2>Daily Trend</h2>
+              <p>Unique visits versus total scans.</p>
+            </div>
+            <div class="legend">
+              <span><i class="legend-total"></i>Total</span>
+              <span><i class="legend-unique"></i>Unique</span>
+            </div>
           </div>
           <div id="daily-chart" class="bars"></div>
         </article>
 
-        <article class="panel">
+        <article class="panel chart-panel">
           <div class="panel-head">
-            <h2>Hourly Load</h2>
-            <p>Total scan volume by hour across the selected range.</p>
+            <div>
+              <h2>Hourly Load</h2>
+              <p>Total scan volume by hour across the selected range.</p>
+            </div>
           </div>
           <div id="hourly-chart" class="bars bars-hourly"></div>
         </article>

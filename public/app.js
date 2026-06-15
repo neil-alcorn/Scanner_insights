@@ -1,4 +1,5 @@
 const statsRoot = document.getElementById('stats');
+const insightsRoot = document.getElementById('insights');
 const listenerMeta = document.getElementById('listener-meta');
 const listenerToggle = document.getElementById('listener-toggle');
 const listenerStatus = document.getElementById('listener-status');
@@ -42,6 +43,10 @@ function formatNumber(value) {
   return new Intl.NumberFormat().format(value || 0);
 }
 
+function formatPercent(value) {
+  return `${Math.round((value || 0) * 100)}%`;
+}
+
 function setStatus(element, text, isError = false) {
   if (!element) return;
   element.textContent = text;
@@ -50,24 +55,66 @@ function setStatus(element, text, isError = false) {
 
 function renderStats(summary) {
   const cards = [
-    ['Unique In Range', summary.unique_range],
-    ['Total In Range', summary.total_range],
-    ['Repeats In Range', summary.repeats_range],
-    ['Unique Today', summary.unique_today],
-    ['Total Today', summary.total_today],
-    ['All-Time Scans', summary.total_all_time]
+    ['Unique In Range', summary.unique_range, 'Member visits counted once per barcode'],
+    ['Total In Range', summary.total_range, 'All scanner events in the selected window'],
+    ['Repeats In Range', summary.repeats_range, 'Additional same-window scans beyond unique visits'],
+    ['Unique Today', summary.unique_today, 'Distinct barcodes scanned today'],
+    ['Total Today', summary.total_today, 'All scanner events today'],
+    ['All-Time Scans', summary.total_all_time, 'Records currently available for reporting']
   ];
 
   statsRoot.innerHTML = cards
     .map(
-      ([label, value]) => `
-        <article class="stat-card">
+      ([label, value, detail], index) => `
+        <article class="stat-card stat-${index + 1}">
           <span class="label">${label}</span>
           <strong class="value">${formatNumber(value)}</strong>
+          <span class="detail">${detail}</span>
         </article>
       `
     )
     .join('');
+}
+
+function renderInsights(payload) {
+  if (!insightsRoot) return;
+
+  const summary = payload.summary || {};
+  const busiestDay = [...(payload.daily || [])].sort((a, b) => b.total_scans - a.total_scans)[0];
+  const busiestHour = [...(payload.hourly || [])].sort((a, b) => b.total_scans - a.total_scans)[0];
+  const topMachine = [...(payload.machines || [])].sort((a, b) => b.total_scans - a.total_scans)[0];
+  const repeatRate = summary.total_range ? summary.repeats_range / summary.total_range : 0;
+
+  const tiles = [
+    {
+      label: 'Busiest Day',
+      value: busiestDay ? busiestDay.day : 'No data',
+      detail: busiestDay ? `${formatNumber(busiestDay.total_scans)} total scans` : 'Waiting for synced activity'
+    },
+    {
+      label: 'Peak Hour',
+      value: busiestHour ? `${busiestHour.hour}:00` : 'No data',
+      detail: busiestHour ? `${formatNumber(busiestHour.total_scans)} scans in range` : 'No hourly pattern yet'
+    },
+    {
+      label: 'Repeat Share',
+      value: formatPercent(repeatRate),
+      detail: `${formatNumber(summary.repeats_range)} repeat scans in selected range`
+    },
+    {
+      label: 'Top Station',
+      value: topMachine ? topMachine.machine_id : 'No data',
+      detail: topMachine ? `${formatNumber(topMachine.total_scans)} scans from this POS` : 'Agents have not synced yet'
+    }
+  ];
+
+  insightsRoot.innerHTML = tiles.map((tile) => `
+    <article class="insight-card">
+      <span class="label">${tile.label}</span>
+      <strong>${tile.value}</strong>
+      <span>${tile.detail}</span>
+    </article>
+  `).join('');
 }
 
 function renderListener(listener) {
@@ -186,6 +233,7 @@ async function fetchDashboard() {
     }
 
     renderStats(payload.summary);
+    renderInsights(payload);
     renderListener(payload.listener);
     renderDualBars(dailyChart, payload.daily, ['total_scans', 'unique_scans'], (row) => row.day.slice(5));
     renderDualBars(hourlyChart, payload.hourly, ['total_scans'], (row) => `${row.hour}:00`);

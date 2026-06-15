@@ -13,6 +13,7 @@
 - Added cloud schema for `machines` and `scans` with duplicate protection.
 - Added web dashboard machine filter and machine status table.
 - Changed the hosted web direction to dashboard/export only and removed local utility panels from the public web UI.
+- Polished the hosted UI into an operational analytics dashboard with KPI cards, insight tiles, denser chart panels, and clearer export/filter controls.
 - Added cloud CSV export function and Netlify redirect for `/api/export.csv`.
 - Added startup background agent skeleton, listener wrapper, and sync client.
 - Added POS seed validation and cloud seed import scripts.

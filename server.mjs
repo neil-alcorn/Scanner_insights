@@ -311,12 +311,15 @@ function getRangeParams(query) {
   };
 }
 
-function buildSummary(range) {
-  const selectedScans = scans.filter((scan) => {
+function buildSummary(range, machineId = '') {
+  const filteredScans = machineId
+    ? scans.filter((scan) => scan.machine_id === machineId)
+    : scans;
+  const selectedScans = filteredScans.filter((scan) => {
     const day = scan.scanned_at.slice(0, 10);
     return day >= range.start && day <= range.end;
   });
-  const todayScans = scans.filter((scan) => scan.scanned_at.slice(0, 10) === todayString());
+  const todayScans = filteredScans.filter((scan) => scan.scanned_at.slice(0, 10) === todayString());
 
   const countUnique = (rows, keyFn) => new Set(rows.map(keyFn)).size;
   const summary = {
@@ -401,13 +404,58 @@ function buildSummary(range) {
     };
   });
 
+  const machineMap = new Map();
+  for (const scan of selectedScans) {
+    const bucket = machineMap.get(scan.machine_id) || {
+      machine_id: scan.machine_id,
+      total_scans: 0,
+      barcodes: new Set()
+    };
+    bucket.total_scans++;
+    bucket.barcodes.add(scan.barcode);
+    machineMap.set(scan.machine_id, bucket);
+  }
+
+  const machines = Array.from(machineMap.values())
+    .map((bucket) => ({
+      machine_id: bucket.machine_id,
+      total_scans: bucket.total_scans,
+      unique_scans: bucket.barcodes.size
+    }))
+    .sort((a, b) => a.machine_id.localeCompare(b.machine_id));
+
   return {
     summary,
     daily,
     hourly,
     repeats,
-    recent
+    recent,
+    machines
   };
+}
+
+function getAvailableMachines() {
+  const machineMap = new Map();
+  for (const scan of scans) {
+    const current = machineMap.get(scan.machine_id);
+    if (!current || scan.scanned_at > current.last_seen_at) {
+      machineMap.set(scan.machine_id, {
+        machine_id: scan.machine_id,
+        label: scan.machine_id,
+        last_seen_at: scan.scanned_at
+      });
+    }
+  }
+
+  if (!machineMap.has(MACHINE_ID)) {
+    machineMap.set(MACHINE_ID, {
+      machine_id: MACHINE_ID,
+      label: MACHINE_ID,
+      last_seen_at: null
+    });
+  }
+
+  return Array.from(machineMap.values()).sort((a, b) => a.machine_id.localeCompare(b.machine_id));
 }
 
 function parseCSVLine(line) {
@@ -444,7 +492,19 @@ app.get('/api/health', (_req, res) => {
 
 app.get('/api/dashboard', (req, res) => {
   const range = getRangeParams(req.query);
-  res.json({ range, listener: listenerState, machineId: MACHINE_ID, ...buildSummary(range) });
+  const availableMachines = getAvailableMachines();
+  const requestedMachine = String(req.query.machine || '').trim();
+  const selectedMachine = availableMachines.some((machine) => machine.machine_id === requestedMachine)
+    ? requestedMachine
+    : '';
+
+  res.json({
+    range,
+    listener: listenerState,
+    machineId: selectedMachine || 'all',
+    availableMachines,
+    ...buildSummary(range, selectedMachine)
+  });
 });
 
 app.get('/api/listener', (_req, res) => {
@@ -505,10 +565,12 @@ app.post('/api/reset', async (_req, res) => {
 
 app.get('/api/export.csv', (req, res) => {
   const range = getRangeParams(req.query);
+  const machineId = String(req.query.machine || '').trim();
   const rows = scans
     .filter((scan) => {
       const day = scan.scanned_at.slice(0, 10);
-      return day >= range.start && day <= range.end;
+      const inRange = day >= range.start && day <= range.end;
+      return inRange && (!machineId || scan.machine_id === machineId);
     })
     .sort((a, b) => a.scanned_at.localeCompare(b.scanned_at) || a.id - b.id);
 

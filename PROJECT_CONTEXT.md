@@ -52,6 +52,7 @@ Completed on `feature/web-sync-agent`:
 - Cloud SQL schema for `machines` and `scans`.
 - Web dashboard machine filter and machine table.
 - Dashboard-only hosted UI: local listener/manual scan/simulator/import panels removed from the Netlify-facing page.
+- Polished dashboard UX with KPI cards, insight tiles, chart panels, machine status, and export controls.
 - Cloud CSV export endpoint for date and machine filtered reporting.
 - Startup background agent skeleton.
 - Keyboard listener wrapper for `ScannerKeyHook.exe`.
