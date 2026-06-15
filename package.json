@@ -7,6 +7,7 @@
     "dev": "node server.mjs",
     "agent": "node src/local/agent.mjs",
     "web:local": "node src/local/server.mjs",
+    "build:netlify": "node --check public/app.js",
     "test": "node --test",
     "check": "node --check server.mjs && node --check src/shared/scans.mjs && node --check src/shared/local-store.mjs && node --check src/local/agent.mjs && node --check src/local/server.mjs && node --check netlify/functions/dashboard.mjs && node --check netlify/functions/ingest-scans.mjs && node --check netlify/functions/import-csv.mjs && node --check netlify/functions/export-csv.mjs",
     "seed:validate": "node scripts/validate-seed-csv.mjs",
