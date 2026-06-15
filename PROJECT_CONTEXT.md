@@ -94,8 +94,11 @@ Highest priority next steps:
 cd C:\Users\nalco\GitRepos\Scanner_insights\.worktrees\web-sync-agent
 npm test
 npm run check
+npm run deploy:netlify
 node scripts/validate-seed-csv.mjs data\seed\pos1-FS1-BLM-WK04-2026-05-29-to-2026-06-11.csv data\seed\pos2-FS1-BLM-WK02-2026-05-29-to-2026-06-11.csv
 ```
+
+Use `npm run deploy:netlify` for production deploys. It deploys only to the explicit Scanner Insights Netlify site ID and verifies the live page title after deployment. Do not use an implicit `netlify deploy` from this repo.
 
 ## Open Decisions
 

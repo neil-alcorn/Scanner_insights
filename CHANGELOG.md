@@ -51,3 +51,7 @@
 
 - Live site returns `200`: `https://scanner-insights-fslc.netlify.app`.
 - Live dashboard API returns `200` for `/api/dashboard?days=14`.
+
+### Guardrail
+
+- Added `npm run deploy:netlify` to deploy with the explicit Scanner Insights Netlify site ID and verify the production page title after deployment.
