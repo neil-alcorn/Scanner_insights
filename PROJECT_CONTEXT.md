@@ -38,6 +38,7 @@ Melissa Alcorn sent two Gmail messages with same-named CSV attachments. The file
 - Main repo clone: `C:\Users\nalco\GitRepos\Scanner_insights`
 - Active feature worktree: `C:\Users\nalco\GitRepos\Scanner_insights\.worktrees\web-sync-agent`
 - Current implementation branch: `feature/web-sync-agent`
+- Netlify production site: `https://scanner-insights-fslc.netlify.app`
 - Original Codex source copy: `C:\Users\nalco\.codex\scanner-insights`
 - Implementation plan: `docs/superpowers/plans/2026-06-14-scanner-insights-web-sync-agent.md`
 
@@ -54,6 +55,7 @@ Completed on `feature/web-sync-agent`:
 - Dashboard-only hosted UI: local listener/manual scan/simulator/import panels removed from the Netlify-facing page.
 - Polished dashboard UX with KPI cards, insight tiles, chart panels, machine status, and export controls.
 - Cloud CSV export endpoint for date and machine filtered reporting.
+- Netlify production deployment using current `@netlify/database` runtime and schema migration.
 - Startup background agent skeleton.
 - Keyboard listener wrapper for `ScannerKeyHook.exe`.
 - Sync client with retryable failure behavior.

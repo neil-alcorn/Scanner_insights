@@ -37,3 +37,17 @@
 - Import POS seed data.
 - Update Windows installer/startup scripts for the independent background agent.
 - End-to-end test capture, offline queueing, sync, and web reporting.
+
+## 2026-06-15
+
+### Fixed
+
+- Created and deployed the dedicated Netlify site `scanner-insights-fslc`.
+- Fixed live dashboard loading by replacing legacy `@netlify/neon` usage with current `@netlify/database`.
+- Added a Netlify Database migration for the Scanner Insights `machines` and `scans` schema.
+- Added `build:netlify` so Netlify has an explicit build command.
+
+### Verified
+
+- Live site returns `200`: `https://scanner-insights-fslc.netlify.app`.
+- Live dashboard API returns `200` for `/api/dashboard?days=14`.
