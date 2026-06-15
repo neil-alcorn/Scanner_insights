@@ -14,7 +14,7 @@
     "seed:cloud": "node scripts/seed-cloud-from-csv.mjs"
   },
   "dependencies": {
-    "@netlify/neon": "^0.1.2",
+    "@netlify/database": "^1.0.0",
     "express": "^4.21.2"
   }
 }

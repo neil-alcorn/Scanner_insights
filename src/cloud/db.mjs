@@ -1,10 +1,10 @@
-import { neon } from '@netlify/neon';
+import { getDatabase } from '@netlify/database';
 
 let client;
 
 export function getSql() {
   if (!client) {
-    client = neon();
+    client = getDatabase().sql;
   }
   return client;
 }
