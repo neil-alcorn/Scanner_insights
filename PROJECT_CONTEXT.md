@@ -65,19 +65,15 @@ Verification passed:
 
 - `npm test`: 14 tests passing.
 - `npm run check`: passing.
+- Live seed data imported into Netlify: 1,101 total rows, `FS1-BLM-WK04` = 531 and `FS1-BLM-WK02` = 570.
 
 ## Next Work
 
 Highest priority next steps:
 
-1. Save POS 1 and POS 2 long CSV exports into `data/seed/` locally.
-2. Run `node scripts/validate-seed-csv.mjs <pos1.csv> <pos2.csv>`.
-3. Configure the Netlify site and database.
-4. Apply `src/cloud/schema.sql` to the hosted database.
-5. Import seed CSVs through the cloud import endpoint.
-6. Update installer/startup scripts so the agent runs independently at Windows startup.
-7. Verify the installed agent captures scans, queues while offline, and syncs when online.
-8. Expand analysis/export features once cloud data is flowing, such as repeat patterns, machine comparison, day/hour exports, and date-filtered CSV downloads.
+1. Update installer/startup scripts so the agent runs independently at Windows startup.
+2. Verify the installed agent captures scans, queues while offline, and syncs when online.
+3. Expand analysis/export features now that cloud seed data is flowing, such as repeat patterns, machine comparison, day/hour exports, and date-filtered CSV downloads.
 
 ## Invariants
 

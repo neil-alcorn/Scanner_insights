@@ -51,6 +51,11 @@
 
 - Live site returns `200`: `https://scanner-insights-fslc.netlify.app`.
 - Live dashboard API returns `200` for `/api/dashboard?days=14`.
+- Imported POS seed history into the live Scanner database:
+  - `FS1-BLM-WK04`: 531 rows.
+  - `FS1-BLM-WK02`: 570 rows.
+  - Combined total: 1,101 rows.
+- Re-importing both seed files returns clean JSON with `inserted: 0` and all rows skipped as duplicates.
 
 ### Guardrail
 
