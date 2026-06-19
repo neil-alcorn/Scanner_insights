@@ -25,6 +25,8 @@ Copy-Item (Join-Path $appRoot "package.json") -Destination $appBundleRoot -Force
 Copy-Item (Join-Path $appRoot "package-lock.json") -Destination $appBundleRoot -Force
 Copy-Item (Join-Path $appRoot "README.md") -Destination $appBundleRoot -Force
 Copy-Item (Join-Path $appRoot "public") -Destination $appBundleRoot -Recurse -Force
+Copy-Item (Join-Path $appRoot "src") -Destination $appBundleRoot -Recurse -Force
+Copy-Item (Join-Path $appRoot "netlify") -Destination $appBundleRoot -Recurse -Force
 Copy-Item (Join-Path $appRoot "node_modules") -Destination $appBundleRoot -Recurse -Force
 Copy-Item (Join-Path $appRoot "bin") -Destination $appBundleRoot -Recurse -Force
 
@@ -120,6 +122,8 @@ foreach ($relativePath in $pathsToRemove) {
 
 $launcherFiles = @(
   "Install-Local.bat",
+  "Start-Agent.bat",
+  "Start-Agent.vbs",
   "Start-Installed.bat",
   "Start-Installed.vbs",
   "Create-Shortcut.bat",
@@ -145,12 +149,19 @@ Install flow
 1. Double-click launchers\Install-Local.bat
 2. The installer verifies Node.js and npm
 3. The app is copied to LocalAppData with its prebuilt dependencies
-4. Desktop and Startup shortcuts are created
-5. Your browser opens to the local dashboard
+4. Existing local scan data is preserved
+5. A background scanner agent is started and added to Windows Startup
+6. A desktop shortcut is created for the optional local dashboard
 
 Installed shortcuts
-- launchers\Start-Installed.bat starts the installed copy.
-- launchers\Stop-Installed.bat stops the installed copy.
+- launchers\Start-Agent.bat starts the installed background sync agent.
+- launchers\Start-Installed.bat opens the optional local dashboard.
+- launchers\Stop-Installed.bat stops the agent and local dashboard.
+
+Cloud sync
+- The installed agent posts scans to https://scanner-insights-fslc.netlify.app/.netlify/functions/ingest-scans
+- Scans are written locally first, then synced about every 15 seconds while online.
+- The web dashboard reads the combined cloud data at https://scanner-insights-fslc.netlify.app
 
 If install/start fails
 - Double-click launchers\Collect-Logs.bat

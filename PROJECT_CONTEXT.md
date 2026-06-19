@@ -1,6 +1,6 @@
 # Scanner Insights Project Context
 
-Last updated: 2026-06-14
+Last updated: 2026-06-19
 
 ## Purpose
 
@@ -60,6 +60,7 @@ Completed on `feature/web-sync-agent`:
 - Keyboard listener wrapper for `ScannerKeyHook.exe`.
 - Sync client with retryable failure behavior.
 - Seed validation and seed import scripts.
+- Windows installer/startup scripts now preserve existing local data, install the background sync agent, create a Startup shortcut for the agent, and keep the local dashboard optional with its listener disabled.
 
 Verification passed:
 
@@ -71,9 +72,10 @@ Verification passed:
 
 Highest priority next steps:
 
-1. Update installer/startup scripts so the agent runs independently at Windows startup.
-2. Verify the installed agent captures scans, queues while offline, and syncs when online.
-3. Expand analysis/export features now that cloud seed data is flowing, such as repeat patterns, machine comparison, day/hour exports, and date-filtered CSV downloads.
+1. Copy the rebuilt bundle from `dist\scanner-insights-usb` to a writable USB drive or other transfer location. The current `D:` USB reported `The media is write protected` on 2026-06-19, so it was not updated.
+2. Run `launchers\Install-Local.bat` once on POS 1 and POS 2.
+3. Verify the installed agent captures scans, queues while offline, and syncs when online.
+4. Expand analysis/export features now that cloud seed data is flowing, such as repeat patterns, machine comparison, day/hour exports, and date-filtered CSV downloads.
 
 ## Invariants
 
@@ -98,7 +100,7 @@ Use `npm run deploy:netlify` for production deploys. It deploys only to the expl
 
 ## Open Decisions
 
-- Confirm final hosted database provider. Current implementation expects `@netlify/neon`.
-- Confirm Netlify site name and deployment flow.
-- Decide whether the Windows startup agent should use a Startup shortcut or scheduled task.
+- Final hosted database provider is Netlify Database via `@netlify/database`.
+- Production Netlify site is `scanner-insights-fslc`.
+- Current Windows startup approach uses a per-user Startup shortcut named `Scanner Insights Agent.lnk`.
 - Decide how machine labels should display in the dashboard, for example `POS 1` and `POS 2` instead of raw machine IDs.

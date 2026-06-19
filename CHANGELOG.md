@@ -1,5 +1,24 @@
 # Changelog
 
+## 2026-06-19
+
+### Added
+
+- Updated the Windows install path so the background scanner agent can run at Windows Startup independently of the browser dashboard.
+- Added hidden agent launchers, preserved local data during reinstall, and wrote installed agent config for the live Netlify ingest endpoint.
+- Updated the USB bundle builder to include `src`, Netlify function contracts, and the new agent launchers.
+
+### Verified
+
+- `npm test` passes with 14 tests.
+- `npm run check` passes.
+- PowerShell parser checks pass for the installer, launchers, and USB bundle script.
+- Rebuilt the updated package locally at `dist\scanner-insights-usb`.
+
+### Blocked
+
+- Could not write the rebuilt package to `D:\scanner-insights-usb` because Windows reports the USB media is write protected.
+
 ## 2026-06-14
 
 ### Added

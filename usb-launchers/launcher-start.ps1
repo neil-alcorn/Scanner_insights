@@ -1,5 +1,7 @@
 param(
-  [string]$Mode = "portable"
+  [string]$Mode = "portable",
+  [ValidateSet("dashboard", "agent")]
+  [string]$Target = "dashboard"
 )
 
 $ErrorActionPreference = "Stop"
@@ -21,13 +23,37 @@ try {
   exit 1
 }
 $serverScript = Join-Path $appRoot "server.mjs"
+$agentScript = Join-Path $appRoot "src\local\agent.mjs"
 $runRoot = Join-Path $appRoot "run"
+$installRunRoot = if ($Mode -eq "installed") { Join-Path $installRoot "run" } else { $runRoot }
+$configRoot = if ($Mode -eq "installed") { Join-Path $installRoot "config" } else { Join-Path $bundleRoot "config" }
+$agentEnvPath = Join-Path $configRoot "agent.env"
 $pidFile = Join-Path $runRoot "server.pid"
 $portFile = Join-Path $runRoot "server.port"
 $stdoutLog = Join-Path $runRoot "server.out.log"
 $stderrLog = Join-Path $runRoot "server.err.log"
+$agentPidFile = Join-Path $installRunRoot "agent.pid"
+$agentStdoutLog = Join-Path $installRunRoot "agent.out.log"
+$agentStderrLog = Join-Path $installRunRoot "agent.err.log"
 
 New-Item -ItemType Directory -Force -Path $runRoot | Out-Null
+New-Item -ItemType Directory -Force -Path $installRunRoot | Out-Null
+
+function Import-AgentEnv {
+  if (-not (Test-Path $agentEnvPath)) {
+    return
+  }
+
+  Get-Content $agentEnvPath -ErrorAction SilentlyContinue | ForEach-Object {
+    $line = $_.Trim()
+    if (-not $line -or $line.StartsWith("#") -or -not $line.Contains("=")) {
+      return
+    }
+
+    $parts = $line.Split("=", 2)
+    [Environment]::SetEnvironmentVariable($parts[0].Trim(), $parts[1].Trim(), "Process")
+  }
+}
 
 function Export-Diagnostics {
   param([string]$Reason)
@@ -102,8 +128,59 @@ function Test-PortListening {
   }
 }
 
+function Start-Agent {
+  Import-AgentEnv
+
+  if (-not (Test-Path $agentScript)) {
+    Add-Type -AssemblyName System.Windows.Forms
+    [System.Windows.Forms.MessageBox]::Show("Scanner Insights agent is missing from the installed app. Please rerun the installer.", "Scanner Insights") | Out-Null
+    exit 1
+  }
+
+  if (-not $env:SCANNER_MACHINE_ID) {
+    $env:SCANNER_MACHINE_ID = $env:COMPUTERNAME
+  }
+
+  if (-not $env:SCANNER_INSIGHTS_DATA_DIR) {
+    $env:SCANNER_INSIGHTS_DATA_DIR = if ($Mode -eq "installed") { Join-Path $installRoot "data" } else { Join-Path $appRoot "data" }
+  }
+
+  if (-not $env:SCANNER_INSIGHTS_SYNC_INTERVAL_MS) {
+    $env:SCANNER_INSIGHTS_SYNC_INTERVAL_MS = "15000"
+  }
+
+  if (Test-Path $agentPidFile) {
+    $existingAgentPid = (Get-Content $agentPidFile -ErrorAction SilentlyContinue | Select-Object -First 1).Trim()
+    if ($existingAgentPid) {
+      $existingAgent = Get-Process -Id $existingAgentPid -ErrorAction SilentlyContinue
+      if ($existingAgent) {
+        return
+      }
+    }
+    Remove-Item $agentPidFile -Force -ErrorAction SilentlyContinue
+  }
+
+  $command = "set `"SCANNER_MACHINE_ID=$env:SCANNER_MACHINE_ID`" && set `"SCANNER_INSIGHTS_DATA_DIR=$env:SCANNER_INSIGHTS_DATA_DIR`" && set `"SCANNER_INSIGHTS_CLOUD_ENDPOINT=$env:SCANNER_INSIGHTS_CLOUD_ENDPOINT`" && set `"SCANNER_INSIGHTS_SYNC_INTERVAL_MS=$env:SCANNER_INSIGHTS_SYNC_INTERVAL_MS`" && `"$nodePath`" `"$agentScript`" >> `"$agentStdoutLog`" 2>> `"$agentStderrLog`""
+  $process = Start-Process -FilePath "cmd.exe" `
+    -ArgumentList "/c", $command `
+    -WorkingDirectory $appRoot `
+    -PassThru `
+    -WindowStyle Hidden
+
+  Set-Content -Path $agentPidFile -Value $process.Id -Encoding ASCII
+}
+
+if ($Target -eq "agent") {
+  Start-Agent
+  exit 0
+}
+
 $port = Get-Port
 $appUrl = "http://127.0.0.1:$port"
+$env:SCANNER_INSIGHTS_DISABLE_LISTENER = "1"
+if (-not $env:SCANNER_INSIGHTS_DATA_DIR -and $Mode -eq "installed") {
+  $env:SCANNER_INSIGHTS_DATA_DIR = Join-Path $installRoot "data"
+}
 
 if (Test-Path $pidFile) {
   $existingPid = (Get-Content $pidFile -ErrorAction SilentlyContinue | Select-Object -First 1).Trim()

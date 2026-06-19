@@ -10,7 +10,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 
 const PORT = Number(process.env.SCANNER_INSIGHTS_PORT || 4312);
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.SCANNER_INSIGHTS_DATA_DIR || path.join(__dirname, 'data');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const STORE_PATH = path.join(DATA_DIR, 'scanner-insights.json');
 const MACHINE_ID = process.env.SCANNER_MACHINE_ID || hostname();

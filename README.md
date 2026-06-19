@@ -1,6 +1,6 @@
 # Scanner Insights
 
-Small local barcode analytics app for short-term front-desk tracking.
+Hybrid barcode analytics app for Four Seasons Legacy Center. Windows POS machines capture scanner input locally, queue scans safely, and sync to a Netlify-hosted dashboard for combined reporting.
 
 ## Project context
 
@@ -12,13 +12,12 @@ For direction, resume state, and implementation notes, start with:
 
 ## What it does
 
-- Stores scans in SQLite
-- Tracks daily unique barcodes
-- Shows repeat scans and timing patterns
-- Exports scan history to CSV
-- Includes a simulator so you can test without a physical scanner
-- Includes a keyboard-wedge test pad for fast digit bursts plus `Enter`
-- Includes a Windows global keyboard listener to capture scanner-style input while another app is active
+- Captures scanner-style digit bursts plus `Enter` with a Windows keyboard hook.
+- Keeps scanner keystrokes passing through to ABC.
+- Writes scans to a local durable queue before any network sync.
+- Syncs queued scans to the Netlify ingest API about every 15 seconds while online.
+- Shows combined POS reporting in the hosted dashboard.
+- Exports cloud reporting data to CSV.
 
 ## Run it
 
@@ -30,6 +29,13 @@ npm run dev
 ```
 
 Then open `http://localhost:4312`.
+
+Run the background agent locally:
+
+```powershell
+$env:SCANNER_INSIGHTS_CLOUD_ENDPOINT="https://scanner-insights-fslc.netlify.app/.netlify/functions/ingest-scans"
+npm run agent
+```
 
 ## USB test bundle
 
@@ -55,36 +61,25 @@ Recommended test flow on another machine:
 1. Copy `dist\scanner-insights-usb` to the USB drive.
 2. On the target PC, open the USB folder.
 3. Double-click `launchers\Install-Local.bat`.
-4. The installer verifies `node`, copies the app and its prebuilt dependencies locally, creates desktop and Startup shortcuts, and opens in the browser.
+4. The installer verifies `node`, preserves existing local scan data, copies the app and its prebuilt dependencies locally, starts the background sync agent, creates a Startup shortcut for the agent, and creates a desktop shortcut for the optional local dashboard.
 
-## Test without a scanner
+The installed agent syncs to:
 
-You have three ways to test:
+```text
+https://scanner-insights-fslc.netlify.app/.netlify/functions/ingest-scans
+```
 
-- `Single Scan`: send one barcode directly
-- `Scanner Simulator`: generate a batch of timestamps and repeat scans
-- `Scanner Test Pad`: focus the box, type digits quickly, then press `Enter`
+The hosted dashboard is:
 
-The test pad is useful because many barcode readers act like keyboards and finish each scan with `Enter`.
+```text
+https://scanner-insights-fslc.netlify.app
+```
 
-## Packaging later
+## Expected scanner behavior
 
-Once the workflow is approved, the simplest deployment path is:
-
-1. Package the Node app into a portable Windows bundle or launcher.
-2. Store the SQLite file in the app's local `data` folder.
-3. Add a Windows keyboard listener so scans can be captured while ABC remains the active desktop app.
-4. Place the bundle on the front-desk PC or on a USB drive with a start script.
-
-## Expected scanner behavior later
-
-This version is built to validate the storage and analytics flow first.
-
-For the front-desk deployment, the target scanner behavior is:
+For the front-desk deployment:
 
 - scanner acts as a keyboard wedge
 - barcode digits are typed quickly
 - scanner sends `Enter` after each scan
 - ABC still receives the keystrokes normally
-
-The next deployment step will be adding or packaging a Windows-side keyboard listener so the app can capture the same scan stream while ABC continues to operate.

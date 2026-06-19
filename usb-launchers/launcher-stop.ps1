@@ -14,26 +14,38 @@ if ($Mode -eq "installed") {
 
 $pidFile = Join-Path (Join-Path $appRoot "run") "server.pid"
 $portFile = Join-Path (Join-Path $appRoot "run") "server.port"
+$installRunRoot = if ($Mode -eq "installed") { Join-Path $installRoot "run" } else { Join-Path $appRoot "run" }
+$agentPidFile = Join-Path $installRunRoot "agent.pid"
 
-if (-not (Test-Path $pidFile)) {
-  Write-Host "No PID file found."
-  exit 0
+function Stop-PidFile {
+  param(
+    [string]$Path,
+    [string]$Name
+  )
+
+  if (-not (Test-Path $Path)) {
+    Write-Host "No $Name PID file found."
+    return
+  }
+
+  $pid = (Get-Content $Path | Select-Object -First 1).Trim()
+  if (-not $pid) {
+    Remove-Item $Path -Force -ErrorAction SilentlyContinue
+    Write-Host "$Name PID file was empty."
+    return
+  }
+
+  $process = Get-Process -Id $pid -ErrorAction SilentlyContinue
+  if ($process) {
+    Stop-Process -Id $pid -Force
+    Write-Host "Stopped $Name process $pid."
+  } else {
+    Write-Host "$Name process $pid was not running."
+  }
+
+  Remove-Item $Path -Force -ErrorAction SilentlyContinue
 }
 
-$pid = (Get-Content $pidFile | Select-Object -First 1).Trim()
-if (-not $pid) {
-  Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
-  Write-Host "PID file was empty."
-  exit 0
-}
-
-$process = Get-Process -Id $pid -ErrorAction SilentlyContinue
-if ($process) {
-  Stop-Process -Id $pid -Force
-  Write-Host "Stopped process $pid."
-} else {
-  Write-Host "Process $pid was not running."
-}
-
-Remove-Item $pidFile -Force -ErrorAction SilentlyContinue
+Stop-PidFile -Path $agentPidFile -Name "agent"
+Stop-PidFile -Path $pidFile -Name "server"
 Remove-Item $portFile -Force -ErrorAction SilentlyContinue

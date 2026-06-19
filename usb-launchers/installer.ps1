@@ -20,9 +20,13 @@ if (-not $InstallRoot) {
 $appSource = Join-Path $SourceRoot "app"
 $launchersSource = Join-Path $SourceRoot "launchers"
 $appTarget = Join-Path $InstallRoot "app"
+$dataTarget = Join-Path $InstallRoot "data"
+$configTarget = Join-Path $InstallRoot "config"
 $runRoot = Join-Path $InstallRoot "run"
 $logPath = Join-Path $runRoot "install.log"
 $diagnosticsRoot = Join-Path $SourceRoot "diagnostics"
+$dataBackup = Join-Path $env:TEMP ("ScannerInsightsDataBackup-{0}" -f ([guid]::NewGuid().ToString("N")))
+$cloudEndpoint = "https://scanner-insights-fslc.netlify.app/.netlify/functions/ingest-scans"
 
 New-Item -ItemType Directory -Force -Path $runRoot | Out-Null
 New-Item -ItemType Directory -Force -Path $diagnosticsRoot | Out-Null
@@ -116,6 +120,14 @@ function Remove-ExistingInstall {
     return
   }
 
+  foreach ($candidate in @((Join-Path $InstallRoot "data"), (Join-Path $appTarget "data"))) {
+    if (Test-Path $candidate) {
+      Write-Log "Backing up existing data from $candidate"
+      New-Item -ItemType Directory -Force -Path $dataBackup | Out-Null
+      Copy-Item (Join-Path $candidate "*") -Destination $dataBackup -Recurse -Force -ErrorAction SilentlyContinue
+    }
+  }
+
   Write-Log "Removing previous install at $InstallRoot"
 
   for ($attempt = 1; $attempt -le 5; $attempt++) {
@@ -140,6 +152,8 @@ function Copy-AppFiles {
 
   New-Item -ItemType Directory -Force -Path $runRoot | Out-Null
   New-Item -ItemType Directory -Force -Path $appTarget | Out-Null
+  New-Item -ItemType Directory -Force -Path $dataTarget | Out-Null
+  New-Item -ItemType Directory -Force -Path $configTarget | Out-Null
 
   Write-Log "Copying app files"
   Copy-Item (Join-Path $appSource "server.mjs") -Destination $appTarget -Force
@@ -147,19 +161,36 @@ function Copy-AppFiles {
   Copy-Item (Join-Path $appSource "package-lock.json") -Destination $appTarget -Force
   Copy-Item (Join-Path $appSource "README.md") -Destination $appTarget -Force
   Copy-Item (Join-Path $appSource "public") -Destination $appTarget -Recurse -Force
+  Copy-Item (Join-Path $appSource "src") -Destination $appTarget -Recurse -Force
+  Copy-Item (Join-Path $appSource "netlify") -Destination $appTarget -Recurse -Force
   Copy-Item (Join-Path $appSource "node_modules") -Destination $appTarget -Recurse -Force
   Copy-Item (Join-Path $appSource "bin") -Destination $appTarget -Recurse -Force
+
+  if (Test-Path $dataBackup) {
+    Write-Log "Restoring existing data to $dataTarget"
+    Copy-Item (Join-Path $dataBackup "*") -Destination $dataTarget -Recurse -Force -ErrorAction SilentlyContinue
+  }
+
+  $agentEnv = @(
+    "SCANNER_MACHINE_ID=$env:COMPUTERNAME",
+    "SCANNER_INSIGHTS_CLOUD_ENDPOINT=$cloudEndpoint",
+    "SCANNER_INSIGHTS_DATA_DIR=$dataTarget",
+    "SCANNER_INSIGHTS_SYNC_INTERVAL_MS=15000"
+  )
+  Set-Content -Path (Join-Path $configTarget "agent.env") -Value $agentEnv -Encoding ASCII
 
   Write-Log "Copying launcher files"
   Copy-Item (Join-Path $launchersSource "launcher-start.ps1") -Destination (Join-Path $InstallRoot "launcher-start.ps1") -Force
   Copy-Item (Join-Path $launchersSource "launcher-stop.ps1") -Destination (Join-Path $InstallRoot "launcher-stop.ps1") -Force
   Copy-Item (Join-Path $launchersSource "Start-Installed.bat") -Destination (Join-Path $InstallRoot "Start-Scanner-Insights.bat") -Force
   Copy-Item (Join-Path $launchersSource "Start-Installed.vbs") -Destination (Join-Path $InstallRoot "Start-Scanner-Insights.vbs") -Force
+  Copy-Item (Join-Path $launchersSource "Start-Agent.bat") -Destination (Join-Path $InstallRoot "Start-Scanner-Agent.bat") -Force
+  Copy-Item (Join-Path $launchersSource "Start-Agent.vbs") -Destination (Join-Path $InstallRoot "Start-Scanner-Agent.vbs") -Force
   Copy-Item (Join-Path $launchersSource "Stop-Installed.bat") -Destination (Join-Path $InstallRoot "Stop-Scanner-Insights.bat") -Force
   Copy-Item (Join-Path $launchersSource "Uninstall-Local.bat") -Destination (Join-Path $InstallRoot "Uninstall-Scanner-Insights.bat") -Force
 
-  if (-not (Test-Path (Join-Path $appTarget "server.mjs"))) {
-    Fail-Install "Install copy failed: server.mjs is missing after copy."
+  if (-not (Test-Path (Join-Path $appTarget "src\local\agent.mjs"))) {
+    Fail-Install "Install copy failed: agent.mjs is missing after copy."
   }
 }
 
@@ -201,6 +232,7 @@ function Create-Shortcuts {
   $startup = [Environment]::GetFolderPath("Startup")
   $startBat = Join-Path $InstallRoot "Start-Scanner-Insights.bat"
   $startVbs = Join-Path $InstallRoot "Start-Scanner-Insights.vbs"
+  $agentVbs = Join-Path $InstallRoot "Start-Scanner-Agent.vbs"
   $wscript = Join-Path $env:WINDIR "System32\wscript.exe"
   $icon = Join-Path $InstallRoot "app\public\scanner-insights.ico"
 
@@ -211,8 +243,9 @@ function Create-Shortcuts {
   }
 
   if ($startup -and (Test-Path $startup)) {
-    if (Create-Shortcut -ShortcutPath (Join-Path $startup "Scanner Insights Startup.lnk") -TargetPath $startBat -WorkingDirectory $InstallRoot) {
-      Write-Log "Startup shortcut created"
+    Remove-Item (Join-Path $startup "Scanner Insights Startup.lnk") -Force -ErrorAction SilentlyContinue
+    if (Create-Shortcut -ShortcutPath (Join-Path $startup "Scanner Insights Agent.lnk") -TargetPath $wscript -Arguments "`"$agentVbs`"" -WorkingDirectory $InstallRoot -IconLocation $icon) {
+      Write-Log "Startup agent shortcut created"
     }
   }
 }
@@ -223,5 +256,5 @@ Create-Shortcuts
 
 Write-Log "Starting installed app"
 $env:SCANNER_INSIGHTS_DIAG_ROOT = $diagnosticsRoot
-& (Join-Path $InstallRoot "launcher-start.ps1") -Mode installed | Out-Null
+& (Join-Path $InstallRoot "launcher-start.ps1") -Mode installed -Target agent | Out-Null
 Write-Log "Install complete"
